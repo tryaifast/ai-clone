@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI分身 - 用户平台</title>
+    <script src="https://res.cloudbase.app/cloudbase-core/2.8.0/cloudbase.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .header h1 { font-size: 32px; margin-bottom: 10px; }
+        .header p { font-size: 16px; opacity: 0.9; }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .card h2 { font-size: 20px; margin-bottom: 20px; color: #333; }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        .status {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+        .status.success {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        .status.error {
+            background: #fff1f0;
+            color: #ff4d4f;
+            border: 1px solid #ffccc7;
+        }
+        .status.pending {
+            background: #fffbe6;
+            color: #faad14;
+            border: 1px solid #ffe58f;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-item .label { font-size: 12px; color: #999; margin-bottom: 5px; }
+        .stat-item .value { font-size: 24px; font-weight: bold; color: #667eea; }
+        .key-display {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .key-display code {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #333;
+        }
+        .btn-copy {
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .btn-copy:hover { background: #764ba2; }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #666;
+            font-size: 13px;
+        }
+        .table tr:hover { background: #fafafa; }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .badge.success { background: #f6ffed; color: #52c41a; }
+        .badge.pending { background: #fffbe6; color: #faad14; }
+        .badge.error { background: #fff1f0; color: #ff4d4f; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        .tab {
+            padding: 10px 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        .tab:hover {
+            background: #f0f0f0;
+        }
+        .tab.active:hover {
+            background: #667eea;
+        }
+        .loading { text-align: center; color: #999; padding: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI分身平台</h1>
+            <p>申请API Key，开始使用个人AI分身</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="apply">申请API Key</div>
+            <div class="tab" data-tab="status">我的申请</div>
+            <div class="tab" data-tab="usage">使用统计</div>
+        </div>
+
+        <!-- 申请API Key -->
+        <div class="section active" id="tab-apply">
+            <div class="card">
+                <h2>📝 申请API Key</h2>
+                <form id="applyForm">
+                    <div class="form-group">
+                        <label>公司/个人名称 *</label>
+                        <input type="text" id="companyName" placeholder="例：张三科技有限公司" required>
+                    </div>
+                    <div class="form-group">
+                        <label>联系人 *</label>
+                        <input type="text" id="contactName" placeholder="例：张三" required>
+                    </div>
+                    <div class="form-group">
+                        <label>邮箱 *</label>
+                        <input type="email" id="email" placeholder="example@company.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>电话 *</label>
+                        <input type="tel" id="phone" placeholder="13800138000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>使用场景 *</label>
+                        <select id="useCase" required>
+                            <option value="">-- 请选择 --</option>
+                            <option value="小程序">小程序接入</option>
+                            <option value="网站">网站集成</option>
+                            <option value="客服">客服机器人</option>
+                            <option value="内部">内部系统</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>详细描述</label>
+                        <textarea id="description" placeholder="请描述你的使用场景和需求..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>预期调用量（每天）</label>
+                        <select id="callVolume">
+                            <option value="1000">< 1,000次</option>
+                            <option value="10000">1,000 - 10,000次</option>
+                            <option value="100000">10,000 - 100,000次</option>
+                            <option value="1000000">> 100,000次</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">提交申请</button>
+                    <div id="submitStatus"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 我的申请 -->
+        <div class="section" id="tab-status">
+            <div class="card">
+                <h2>📋 我的申请状态</h2>
+                <div id="applicationsList" class="loading">加载中...</div>
+            </div>
+
+            <div class="card" id="approvedKeysCard" style="display: none;">
+                <h2>🔑 已获批的API Key</h2>
+                <div id="approvedKeysList"></div>
+            </div>
+        </div>
+
+        <!-- 使用统计 -->
+        <div class="section" id="tab-usage">
+            <div class="card">
+                <h2>📊 使用统计</h2>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="label">今日调用</div>
+                        <div class="value" id="todayUsage">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">本月调用</div>
+                        <div class="value" id="monthUsage">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">总调用</div>
+                        <div class="value" id="totalUsage">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">成功率</div>
+                        <div class="value" id="successRate">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化CloudBase
+        const app = cloudbase.initializeApp({
+            env: 'cloudbase-5gk0iy8d00f1333'
+        });
+        const db = app.database();
+
+        // 生成API Key
+        function generateApiKey() {
+            return 'sk-' + Math.random().toString(36).substr(2, 32);
+        }
+
+        // 标签页切换
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+                if (this.dataset.tab === 'status') loadApplications();
+            });
+        });
+
+        // 申请表单提交
+        document.getElementById('applyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const statusDiv = document.getElementById('submitStatus');
+            
+            const data = {
+                companyName: document.getElementById('companyName').value,
+                contactName: document.getElementById('contactName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                useCase: document.getElementById('useCase').value,
+                description: document.getElementById('description').value,
+                callVolume: document.getElementById('callVolume').value,
+                apiKey: generateApiKey(),
+                status: 'pending',
+                timestamp: new Date().toISOString(),
+                _id: Math.random().toString(36).substr(2, 9)
+            };
+
+            try {
+                await db.collection('applications').add(data);
+                statusDiv.innerHTML = `<div class="status success">✅ 申请已提交！请等待审核</div>`;
+                document.getElementById('applyForm').reset();
+                setTimeout(() => loadApplications(), 1000);
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ 提交失败: ${error.message}</div>`;
+            }
+        });
+
+        // 加载申请列表
+        async function loadApplications() {
+            try {
+                const result = await db.collection('applications').get();
+                const applications = result.data;
+                
+                const listDiv = document.getElementById('applicationsList');
+                const approvedDiv = document.getElementById('approvedKeysList');
+                
+                if (applications.length === 0) {
+                    listDiv.innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">暂无申请记录</p>';
+                    document.getElementById('approvedKeysCard').style.display = 'none';
+                    return;
+                }
+
+                let html = '<table class="table"><thead><tr><th>申请时间</th><th>公司</th><th>使用场景</th><th>状态</th></tr></thead><tbody>';
+                let approvedHtml = '';
+                let hasApproved = false;
+
+                applications.forEach(app => {
+                    const date = new Date(app.timestamp).toLocaleString('zh-CN');
+                    const statusText = app.status === 'approved' ? '✅ 已通过' : app.status === 'pending' ? '⏳ 审核中' : '❌ 已拒绝';
+                    const statusBadge = `<span class="badge ${app.status}">${statusText}</span>`;
+                    html += `<tr><td>${date}</td><td>${app.companyName}</td><td>${app.useCase}</td><td>${statusBadge}</td></tr>`;
+
+                    if (app.status === 'approved') {
+                        hasApproved = true;
+                        approvedHtml += `
+                            <div class="key-display">
+                                <code>${app.apiKey}</code>
+                                <button class="btn-copy" onclick="copyToClipboard('${app.apiKey}')">复制</button>
+                            </div>
+                            <p style="font-size: 12px; color: #999; margin-top: 8px;">调用限额: ${app.callVolume}/天</p>
+                        `;
+                    }
+                });
+
+                html += '</tbody></table>';
+                listDiv.innerHTML = html;
+
+                if (hasApproved) {
+                    document.getElementById('approvedKeysCard').style.display = 'block';
+                    approvedDiv.innerHTML = approvedHtml;
+                } else {
+                    document.getElementById('approvedKeysCard').style.display = 'none';
+                }
+            } catch (error) {
+                document.getElementById('applicationsList').innerHTML = `<div class="status error">❌ 加载失败: ${error.message}</div>`;
+            }
+        }
+
+        // 复制到剪贴板
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('已复制到剪贴板');
+            });
+        }
+
+        // 页面加载时获取数据
+        loadApplications();
+    </script>
+</body>
+</html>
