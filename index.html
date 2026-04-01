@@ -188,6 +188,32 @@ footer p{margin-bottom:6px}
 </nav>
 
 <!-- ===== HOME PAGE ===== -->
+<div id="page-marketplace" class="page">
+  <div class="dash-wrap">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <button class="btn-o" onclick="showPage('home')" style="padding:8px 16px;font-size:13px">鈫?杩斿洖</button>
+      <h1 class="dash-title" style="margin:0">鍒嗚韩骞垮満</h1>
+    </div>
+    <div style="background:var(--card);border-radius:16px;padding:20px;margin-bottom:20px;border:1px solid var(--border)">
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <input type="text" id="mp-search" placeholder="鎼滅储鍒嗚韩..." style="flex:1;min-width:200px;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--card2);color:var(--fg)">
+        <button class="btn-p" onclick="filterMP()" style="padding:12px 20px">鎼滅储</button>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <select id="mp-industry" onchange="filterMP()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card2);color:var(--fg);font-size:13px">
+          <option value="">鍏ㄩ儴琛屼笟</option><option value="浜掕仈缃?>浜掕仈缃?/option><option value="閲戣瀺">閲戣瀺</option><option value="鏁欒偛">鏁欒偛</option><option value="娉曞緥">娉曞緥</option><option value="璁捐">璁捐</option>
+        </select>
+        <select id="mp-price" onchange="filterMP()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card2);color:var(--fg);font-size:13px">
+          <option value="">浠锋牸涓嶉檺</option><option value="0-10">楼0-10</option><option value="10-50">楼10-50</option><option value="50-100">楼50-100</option><option value="100+">楼100+</option>
+        </select>
+        <select id="mp-hires" onchange="filterMP()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card2);color:var(--fg);font-size:13px">
+          <option value="">闆囦剑娆℃暟</option><option value="0">0娆?/option><option value="1-10">1-10娆?/option><option value="10-50">10-50娆?/option><option value="50+">50娆?</option>
+        </select>
+      </div>
+    </div>
+    <div id="mp-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px"></div>
+  </div>
+</div>
 <div id="page-home" class="page on">
 
 <div class="hero">
@@ -459,7 +485,7 @@ function showPage(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.getElementById('page-'+page).classList.add('on');
   window.scrollTo({top:0,behavior:'smooth'});
-  if(page==='marketplace'){initMP();}if(page==='dash'){
+  if(page==='marketplace'){initMP();}if(page==='marketplace'){initMP();}if(page==='dash'){
     document.getElementById('dash-welcome').textContent='欢迎回来 👋';
     loadData().then(renderDash);
   }
@@ -735,6 +761,15 @@ function sendCode(){} // removed$/.test(phone)) {
   }, 1000);
 }
 
+function enterApply() {
+  const saved = localStorage.getItem('ac_user');
+  if (saved) {
+    window.location.href = 'user.html';
+  } else {
+    document.getElementById('auth-modal').classList.add('show');
+    window.afterAuthRedirect = 'user.html';
+  }
+}
 async function doAuth() {
   const phone = document.getElementById('auth-phone').value.trim();
   const pwd = document.getElementById('auth-pwd').value;
@@ -779,8 +814,13 @@ async function doAuth() {
   window.location.href = window.afterAuthRedirect;
   window.afterAuthRedirect = null;
 } else {
+  if (window.afterAuthRedirect) {
+  window.location.href = window.afterAuthRedirect;
+  window.afterAuthRedirect = null;
+} else {
   showPage('dash');
   renderDash();
+}
 }
 }$/.test(phone)) { errEl.textContent = '请输入正确的手机号'; return; }
   if (!code) { errEl.textContent = '请输入验证码'; return; }
@@ -825,8 +865,13 @@ async function doAuth() {
   window.location.href = window.afterAuthRedirect;
   window.afterAuthRedirect = null;
 } else {
+  if (window.afterAuthRedirect) {
+  window.location.href = window.afterAuthRedirect;
+  window.afterAuthRedirect = null;
+} else {
   showPage('dash');
   renderDash();
+}
 }
 }
 
@@ -837,6 +882,34 @@ function logout() {
   showToast('已退出登录');
 }
 
+function initMP() {
+  const mock = [
+    {name:'浜у搧缁忕悊灏忓紶',tags:['浜掕仈缃?,'浜у搧'],price:9.9,hireCount:23,desc:'10骞翠骇鍝佺粡楠岋紝鎿呴暱澧為暱'},
+    {name:'娉曞緥椤鹃棶鏉庡緥甯?,tags:['娉曞緥','鍚堝悓'],price:49.9,hireCount:8,desc:'涓撲笟鍚堝悓绾犵悍鍜ㄨ'},
+    {name:'UI璁捐甯堥樋缇?,tags:['璁捐','UI'],price:19.9,hireCount:45,desc:'涓撴敞绉诲姩绔疷I璁捐'},
+    {name:'杩愯惀鑰佸徃鏈?,tags:['浜掕仈缃?,'杩愯惀'],price:15.9,hireCount:67,desc:'浠?鍒?鎼缓鐧句竾绾т骇鍝?},
+    {name:'闆呮€濆彛璇暀缁?,tags:['鏁欒偛','鑻辫'],price:29.9,hireCount:12,desc:'闆呮€?鍒嗭紝甯姪50+瀛︾敓'},
+    {name:'璐㈠姟瑙勫垝甯?,tags:['閲戣瀺','鐞嗚储'],price:39.9,hireCount:34,desc:'CFA鎸佽瘉锛岃祫浜ч厤缃?}
+  ];
+  renderMP(mock);
+}
+function renderMP(list) {
+  const g = document.getElementById('mp-grid');
+  if(!g)return;
+  g.innerHTML = list.map(c=>`
+    <div style="background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#6b8ef5,#a855f7);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700">${c.name.charAt(0)}</div>
+        <div style="flex:1"><div style="font-weight:600;margin-bottom:4px">${c.name}</div><div style="font-size:12px;color:var(--gray)">宸茶闆?{c.hireCount}娆?/div></div>
+        <div style="text-align:right"><div style="font-size:20px;font-weight:700;color:var(--blued)">楼${c.price}</div></div>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">${c.tags.map(t=>`<span style="background:rgba(255,255,255,.07);padding:2px 8px;border-radius:980px;font-size:11px;color:var(--gray)">${t}</span>`).join('')}</div>
+      <p style="color:var(--gray);font-size:13px;margin-bottom:12px">${c.desc}</p>
+      <button class="btn-p" style="width:100%;padding:10px;font-size:13px;border-radius:10px" onclick="showToast('鍔熻兘寮€鍙戜腑','info')">绔嬪嵆闆囦剑</button>
+    </div>
+  `).join('');
+}
+function filterMP() { initMP(); }
 // ===== INIT =====
 loadData().then(()=>{
   renderDash();
