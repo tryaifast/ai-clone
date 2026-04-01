@@ -25,11 +25,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .fg textarea{min-height:75px;resize:vertical}
 .fg .hint{font-size:12px;color:#999;margin-top:4px;line-height:1.5}
 .sbtn{width:100%;padding:13px;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:700;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;transition:.2s}
-.sbtn:active{transform:scale(.98)}
+.sbtn:disabled{background:#ccc;cursor:not-allowed;transform:none}
+.sbtn:active:not(:disabled){transform:scale(.98)}
 .alert{padding:11px 14px;border-radius:7px;font-size:14px;margin-top:11px}
 .alert.ok{background:#f6ffed;color:#52c41a;border:1px solid #b7eb8f}
 .alert.err{background:#fff1f0;color:#ff4d4f;border:1px solid #ffccc7}
 .alert.tip{background:#e6f7ff;color:#1890ff;border:1px solid #91d5ff}
+.alert.warn{background:#fff7e6;color:#fa8c16;border:1px solid #ffe58f}
 .tag{display:inline-block;padding:3px 10px;border-radius:10px;font-size:12px}
 .tag.pending{background:#fff7e6;color:#fa8c16}
 .tag.approved{background:#f6ffed;color:#52c41a}
@@ -49,6 +51,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sb .sv{font-size:28px;font-weight:700;color:#667eea}
 .reject-box{background:#fff1f0;border:1px solid #ffccc7;border-radius:8px;padding:12px;margin-top:10px;font-size:13px;color:#ff4d4f}
 .reject-box b{display:block;margin-bottom:4px}
+.countdown-box{background:#fff7e6;border:1px solid #ffe58f;border-radius:8px;padding:16px;margin-bottom:16px;text-align:center}
+.countdown-box .big{font-size:40px;font-weight:700;color:#fa8c16;line-height:1}
+.countdown-box .lbl{font-size:13px;color:#999;margin-top:4px}
+.remain-box{display:flex;gap:8px;margin-bottom:14px}
+.remain-chip{flex:1;background:#f5f5f5;border-radius:8px;padding:12px;text-align:center;font-size:13px;color:#666}
+.remain-chip.used{background:#fff1f0;color:#ff4d4f}
+.remain-chip.avail{background:#f6ffed;color:#52c41a}
 </style>
 </head>
 <body>
@@ -65,6 +74,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 
   <div class="page show" id="page-apply">
+    <!-- 申请次数提示 -->
+    <div id="remain-box" class="remain-box"></div>
+    <div id="countdown-box" class="countdown-box" style="display:none">
+      <div class="big" id="countdown-time">--</div>
+      <div class="lbl">后可继续提交</div>
+    </div>
+
     <div class="card">
       <h2>申请API Key</h2>
       <form id="form">
@@ -93,7 +109,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
             <option value="1000000">超过 100,000次</option>
           </select>
         </div>
-        <button type="submit" class="sbtn">提交申请</button>
+        <button type="submit" class="sbtn" id="submit-btn">提交申请</button>
         <div id="alert"></div>
       </form>
     </div>
@@ -115,6 +131,137 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <script>
+// ====== 设备指纹生成 ======
+function genFingerprint(){
+  const seeds=[
+    navigator.userAgent,
+    navigator.language,
+    screen.width+'x'+screen.height,
+    screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.hardwareConcurrency||'NA',
+    navigator.platform||'NA',
+    // Canvas指纹
+    (function(){
+      try{
+        const c=document.createElement('canvas');
+        const ctx=c.getContext('2d');
+        ctx.textBaseline='top';
+        ctx.font='14px Arial';
+        ctx.fillStyle='#f60';
+        ctx.fillRect(125,1,62,20);
+        ctx.fillStyle='#069';
+        ctx.fillText('fp',2,15);
+        ctx.fillStyle='rgba(102,204,0,0.7)';
+        ctx.fillText('CLONE',4,17);
+        return c.toDataURL().substr(0,50);
+      }catch(e){return 'NA'}
+    })()
+  ];
+  // 简单hash
+  let h=0;
+  seeds.forEach(s=>{h=((h<<5)-h)+s.charCodeAt(0);h=h&h;});
+  return 'fp_'+Math.abs(h).toString(36)+'_'+navigator.userAgent.length;
+}
+
+const DEVICE_ID='ac_device_id';
+let deviceId=localStorage.getItem(DEVICE_ID);
+if(!deviceId){deviceId=genFingerprint();localStorage.setItem(DEVICE_ID,deviceId);}
+// console.log('Device ID:', deviceId);
+
+// ====== 限流逻辑 ======
+const MAX_PER_HOUR=3;
+const HOUR_MS=60*60*1000;
+
+function getSubHistory(){
+  try{return JSON.parse(localStorage.getItem('ac_sub_history')||'[]')}catch(e){return[]}
+}
+
+function saveSubHistory(h){
+  localStorage.setItem('ac_sub_history',JSON.stringify(h));
+}
+
+function getRecentSubs(){
+  const now=Date.now();
+  const hist=getSubHistory();
+  return hist.filter(t=>now-t<HOUR_MS);
+}
+
+function canSubmit(){
+  const recent=getRecentSubs();
+  return recent.length<MAX_PER_HOUR;
+}
+
+function getRemainCount(){
+  return MAX_PER_HOUR-getRecentSubs().length;
+}
+
+function getNextAvailableTime(){
+  const hist=getSubHistory().sort((a,b)=>a-b);
+  if(hist.length===0)return 0;
+  return hist[0]+HOUR_MS;
+}
+
+function addSubmission(){
+  const hist=getSubHistory();
+  hist.push(Date.now());
+  // 只保留最近1小时内的
+  const now=Date.now();
+  const valid=hist.filter(t=>now-t<HOUR_MS);
+  saveSubHistory(valid);
+}
+
+let countdownTimer=null;
+
+function updateRateLimitUI(){
+  const recent=getRecentSubs();
+  const remain=MAX_PER_HOUR-recent.length;
+  const btn=document.getElementById('submit-btn');
+  const remainBox=document.getElementById('remain-box');
+  const countdownBox=document.getElementById('countdown-box');
+
+  if(remain<=0){
+    btn.disabled=true;
+    btn.textContent='今日申请已用完，请稍后再试';
+    const next=getNextAvailableTime();
+    countdownBox.style.display='block';
+    remainBox.style.display='none';
+
+    function updateCountdown(){
+      const left=next-Date.now();
+      if(left<=0){
+        countdownBox.style.display='none';
+        btn.disabled=false;
+        btn.textContent='提交申请';
+        updateRateLimitUI();
+        return;
+      }
+      const m=Math.floor(left/60000);
+      const s=Math.floor((left%60000)/1000);
+      document.getElementById('countdown-time').textContent=
+        m>0?m+'分'+s+'秒':s+'秒';
+    }
+    updateCountdown();
+    if(!countdownTimer){countdownTimer=setInterval(updateCountdown,1000);}
+  } else {
+    btn.disabled=false;
+    btn.textContent='提交申请（今日剩余 '+remain+' 次）';
+    countdownBox.style.display='none';
+    remainBox.style.display='flex';
+    // 显示3个格子
+    let chips='';
+    for(let i=0;i<3;i++){
+      const used=i<recent.length;
+      chips+=`<div class="remain-chip ${used?'used':'avail'}">
+        ${used?'❌ 已用':'✅ 剩余'}${i<MAX_PER_HOUR?'':'(次日恢复)'}
+      </div>`;
+    }
+    remainBox.innerHTML=chips;
+    if(countdownTimer){clearInterval(countdownTimer);countdownTimer=null;}
+  }
+}
+
+// ====== Gist 数据 ======
 const GIST_ID='a81d2e913c6fc9e8451f25d1d6f89404';
 const GT=['ghp_NGB6o2sk15hRqCHjBDGVB4At','hajD7Y2EObFv'].join('');
 const GIST_URL='https://api.github.com/gists/'+GIST_ID;
@@ -161,12 +308,31 @@ function switchTab(name,el){
 
 document.getElementById('form').addEventListener('submit',async function(e){
   e.preventDefault();
+
+  // 限流检查
+  if(!canSubmit()){
+    const next=getNextAvailableTime();
+    const left=next-Date.now();
+    const m=Math.floor(left/60000);
+    const s=Math.floor((left%60000)/1000);
+    const timeStr=m>0?m+'分'+s+'秒':s+'秒';
+    document.getElementById('alert').innerHTML=
+      `<div class="alert warn">⚠️ 提交过于频繁，请在 ${timeStr} 后再试</div>`;
+    updateRateLimitUI();
+    return;
+  }
+
   const al=document.getElementById('alert');
   al.innerHTML='<div class="alert tip">提交中，请稍候...</div>';
+  document.getElementById('submit-btn').disabled=true;
+
   await loadData();
   const rec={
-    id:genId(), apiKey:genKey(), status:'pending',
+    id:genId(),
+    apiKey:genKey(),
+    status:'pending',
     timestamp:new Date().toISOString(),
+    deviceId:deviceId,
     companyName:document.getElementById('f-co').value,
     contactName:document.getElementById('f-ct').value,
     email:document.getElementById('f-em').value,
@@ -180,8 +346,12 @@ document.getElementById('form').addEventListener('submit',async function(e){
   allData.applications.push(rec);
   await saveData();
   addMyId(rec.id);
+  addSubmission(); // 记录本次提交
+
   al.innerHTML='<div class="alert ok">✅ 申请已提交！点击"我的申请"查看状态</div>';
   this.reset();
+  updateRateLimitUI();
+  setTimeout(()=>{document.getElementById('submit-btn').disabled=false;updateRateLimitUI();},3000);
 });
 
 async function loadMyApps(){
@@ -220,6 +390,9 @@ async function loadUsage(){
 }
 
 function cp(key){navigator.clipboard.writeText(key).then(()=>alert('已复制！'))}
+
+// 初始化
+updateRateLimitUI();
 loadData();
 </script>
 </body>
