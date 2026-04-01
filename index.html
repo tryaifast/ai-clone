@@ -459,7 +459,7 @@ function showPage(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.getElementById('page-'+page).classList.add('on');
   window.scrollTo({top:0,behavior:'smooth'});
-  if(page==='dash'){
+  if(page==='marketplace'){initMP();}if(page==='dash'){
     document.getElementById('dash-welcome').textContent='欢迎回来 👋';
     loadData().then(renderDash);
   }
@@ -775,8 +775,13 @@ async function doAuth() {
   document.getElementById('auth-phone').value = '';
   document.getElementById('auth-pwd').value = '';
   if(document.getElementById('auth-pwd2')) document.getElementById('auth-pwd2').value = '';
+  if (window.afterAuthRedirect) {
+  window.location.href = window.afterAuthRedirect;
+  window.afterAuthRedirect = null;
+} else {
   showPage('dash');
   renderDash();
+}
 }$/.test(phone)) { errEl.textContent = '请输入正确的手机号'; return; }
   if (!code) { errEl.textContent = '请输入验证码'; return; }
   if (code !== generatedCode) { errEl.textContent = '验证码错误，请重新获取'; return; }
@@ -816,8 +821,13 @@ async function doAuth() {
   // Load user's clones
   appData.clones = (appData.clones || []).filter(c => c.ownerId === user.id);
   
+  if (window.afterAuthRedirect) {
+  window.location.href = window.afterAuthRedirect;
+  window.afterAuthRedirect = null;
+} else {
   showPage('dash');
   renderDash();
+}
 }
 
 function logout() {
