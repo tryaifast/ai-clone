@@ -676,8 +676,8 @@ function showToast(msg,type='ok'){
 // ===== AUTH SYSTEM =====
 let currentUser = null;
 let authMode = 'login';
-let generatedCode = '';
-let codeTimer = null;
+let generatedCode = ""; // removed
+let codeTimer = null; // removed
 
 function enterDash() {
   // Check if already logged in
@@ -697,14 +697,18 @@ function switchAuth(mode, btn) {
   authMode = mode;
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  document.getElementById('auth-title').textContent = mode === 'login' ? '欢迎回来' : '创建账号';
-  document.getElementById('auth-desc').textContent = mode === 'login' ? '登录你的AI Clone账号' : '注册一个新账号，开始入驻';
+  document.getElementById('auth-title').textContent = mode === 'login' ? '娆㈣繋鍥炴潵' : '鍒涘缓璐﹀彿';
+  document.getElementById('auth-desc').textContent = mode === 'login' ? '鐧诲綍浣犵殑AI Clone璐﹀彿' : '娉ㄥ唽涓€涓柊璐﹀彿锛屽紑濮嬪叆椹?;
+  document.getElementById('auth-btn').textContent = mode === 'login' ? '鐧诲綍' : '娉ㄥ唽';
   document.getElementById('auth-err').textContent = '';
+  const pwd2Row = document.getElementById('pwd2-row');
+  if(pwd2Row) pwd2Row.style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('auth-switch').innerHTML = mode === 'login' 
+    ? '娌℃湁璐﹀彿锛?a onclick="switchAuth(\'register\')">绔嬪嵆娉ㄥ唽</a>'
+    : '宸叉湁璐﹀彿锛?a onclick="switchAuth(\'login\')">鐩存帴鐧诲綍</a>';
 }
 
-function sendCode() {
-  const phone = document.getElementById('auth-phone').value.trim();
-  if (!/^1[3-9]\d{9}$/.test(phone)) {
+function sendCode(){} // removed$/.test(phone)) {
     document.getElementById('auth-err').textContent = '请输入正确的手机号';
     return;
   }
@@ -733,10 +737,47 @@ function sendCode() {
 
 async function doAuth() {
   const phone = document.getElementById('auth-phone').value.trim();
-  const code = document.getElementById('auth-code').value.trim();
+  const pwd = document.getElementById('auth-pwd').value;
+  const pwd2 = document.getElementById('auth-pwd2')?.value;
   const errEl = document.getElementById('auth-err');
   
-  if (!/^1[3-9]\d{9}$/.test(phone)) { errEl.textContent = '请输入正确的手机号'; return; }
+  if (!/^1[3-9]\d{9}$/.test(phone)) { errEl.textContent = '璇疯緭鍏ユ纭殑鎵嬫満鍙?; return; }
+  if (pwd.length < 6) { errEl.textContent = '瀵嗙爜鑷冲皯6浣?; return; }
+  
+  await loadData();
+  if (!appData.users) appData.users = [];
+  
+  let user = appData.users.find(u => u.phone === phone);
+  
+  if (authMode === 'register') {
+    if (user) { errEl.textContent = '璇ユ墜鏈哄彿宸叉敞鍐岋紝璇风洿鎺ョ櫥褰?; return; }
+    if (pwd !== pwd2) { errEl.textContent = '涓ゆ瀵嗙爜涓嶄竴鑷?; return; }
+    
+    user = {
+      id: genId(),
+      phone,
+      pwdHash: btoa(pwd),
+      deviceId,
+      joinedAt: new Date().toISOString(),
+      name: '', title: '', company: '', email: '', resume: ''
+    };
+    appData.users.push(user);
+    await saveData();
+    showToast('鉁?娉ㄥ唽鎴愬姛锛?);
+  } else {
+    if (!user) { errEl.textContent = '璇ユ墜鏈哄彿鏈敞鍐岋紝璇峰厛娉ㄥ唽'; return; }
+    if (user.pwdHash !== btoa(pwd)) { errEl.textContent = '瀵嗙爜閿欒'; return; }
+  }
+  
+  currentUser = user;
+  localStorage.setItem('ac_user', JSON.stringify(user));
+  document.getElementById('auth-modal').classList.remove('show');
+  document.getElementById('auth-phone').value = '';
+  document.getElementById('auth-pwd').value = '';
+  if(document.getElementById('auth-pwd2')) document.getElementById('auth-pwd2').value = '';
+  showPage('dash');
+  renderDash();
+}$/.test(phone)) { errEl.textContent = '请输入正确的手机号'; return; }
   if (!code) { errEl.textContent = '请输入验证码'; return; }
   if (code !== generatedCode) { errEl.textContent = '验证码错误，请重新获取'; return; }
   
