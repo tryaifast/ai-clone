@@ -23,6 +23,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .fg input,.fg select,.fg textarea{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:7px;font-size:14px;font-family:inherit;transition:.2s}
 .fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:#667eea}
 .fg textarea{min-height:75px;resize:vertical}
+.fg .hint{font-size:12px;color:#999;margin-top:4px;line-height:1.5}
 .sbtn{width:100%;padding:13px;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:700;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;transition:.2s}
 .sbtn:active{transform:scale(.98)}
 .alert{padding:11px 14px;border-radius:7px;font-size:14px;margin-top:11px}
@@ -46,6 +47,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sb{background:#f5f5f5;padding:16px;border-radius:8px;text-align:center}
 .sb .sl{font-size:12px;color:#999;margin-bottom:4px}
 .sb .sv{font-size:28px;font-weight:700;color:#667eea}
+.reject-box{background:#fff1f0;border:1px solid #ffccc7;border-radius:8px;padding:12px;margin-top:10px;font-size:13px;color:#ff4d4f}
+.reject-box b{display:block;margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -75,6 +78,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
             <option>小程序接入</option><option>网站集成</option>
             <option>客服机器人</option><option>内部系统</option><option>其他</option>
           </select>
+        </div>
+        <div class="fg">
+          <label>工作简历</label>
+          <textarea id="f-rs" placeholder="请输入您的工作简历内容，帮助分身雇主更快了解您擅长和可以实操的领域..."></textarea>
+          <div class="hint">💡 输入您的工作简历内容，帮助分身雇主更快了解您擅长和可以实操的领域</div>
         </div>
         <div class="fg"><label>详细描述</label><textarea id="f-ds" placeholder="请描述你的使用场景..."></textarea></div>
         <div class="fg"><label>预期调用量（每天）</label>
@@ -112,20 +120,21 @@ const GT=['ghp_NGB6o2sk15hRqCHjBDGVB4At','hajD7Y2EObFv'].join('');
 const GIST_URL='https://api.github.com/gists/'+GIST_ID;
 const GH={'Authorization':'token '+GT,'Accept':'application/vnd.github.v3+json'};
 
-// 本机申请ID列表（存localStorage）
 function getMyIds(){try{return JSON.parse(localStorage.getItem('my_ids')||'[]')}catch(e){return[]}}
 function addMyId(id){const ids=getMyIds();ids.push(id);localStorage.setItem('my_ids',JSON.stringify(ids))}
 
-let allData={applications:[]};
+let allData={applications:[],clones:[]};
 
 async function loadData(){
   try{
     const r=await fetch(GIST_URL,{headers:GH});
     const g=await r.json();
-    allData=JSON.parse(g.files['data.json'].content);
+    const raw=JSON.parse(g.files['data.json'].content);
+    allData.applications=raw.applications||[];
+    allData.clones=raw.clones||[];
   }catch(e){
     const l=localStorage.getItem('acd');
-    if(l)allData=JSON.parse(l);
+    if(l){const p=JSON.parse(l);allData.applications=p.applications||[];allData.clones=p.clones||[]}
   }
 }
 
@@ -138,15 +147,16 @@ async function saveData(){
 
 function genId(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5)}
 function genKey(){return 'sk-'+Math.random().toString(36).substr(2,32)}
-function sl(s){return s==='pending'?'⏳ 审核中':s==='approved'?'✅ 已通过':'❌ 已拒绝'}
+function sl(s){return s==='pending'?'⏳ 审核中':s==='approved'?'✅ 已通过':s==='rejected'?'❌ 已拒绝':'未知'}
+function fmt(ts){return new Date(ts).toLocaleString('zh-CN')}
 
-function switchTab(name, el){
+function switchTab(name,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('show'));
   el.classList.add('on');
   document.getElementById('page-'+name).classList.add('show');
-  if(name==='status') loadMyApps();
-  if(name==='usage') loadUsage();
+  if(name==='status')loadMyApps();
+  if(name==='usage')loadUsage();
 }
 
 document.getElementById('form').addEventListener('submit',async function(e){
@@ -162,12 +172,14 @@ document.getElementById('form').addEventListener('submit',async function(e){
     email:document.getElementById('f-em').value,
     phone:document.getElementById('f-ph').value,
     useCase:document.getElementById('f-uc').value,
+    resume:document.getElementById('f-rs').value,
     description:document.getElementById('f-ds').value,
-    callVolume:document.getElementById('f-cv').value
+    callVolume:document.getElementById('f-cv').value,
+    rejectReason:''
   };
   allData.applications.push(rec);
   await saveData();
-  addMyId(rec.id); // 记录到本机
+  addMyId(rec.id);
   al.innerHTML='<div class="alert ok">✅ 申请已提交！点击"我的申请"查看状态</div>';
   this.reset();
 });
@@ -177,17 +189,18 @@ async function loadMyApps(){
   div.innerHTML='<div class="loading">加载中...</div>';
   await loadData();
   const myIds=getMyIds();
-  const myApps=(allData.applications||[]).filter(a=>myIds.includes(a.id));
+  const myApps=allData.applications.filter(a=>myIds.includes(a.id));
   if(myApps.length===0){
-    div.innerHTML='<div class="empty">暂无申请记录<br><small style="color:#ccc">提交申请后会显示在这里</small></div>';
-    return;
+    div.innerHTML='<div class="empty">暂无申请记录<br><small style="color:#ccc">提交申请后会显示在这里</small></div>';return;
   }
   div.innerHTML=[...myApps].reverse().map(a=>`
     <div class="item">
       <div class="row"><span class="co">${a.companyName}</span><span class="tag ${a.status}">${sl(a.status)}</span></div>
       <div class="mt">联系人：${a.contactName} | 场景：${a.useCase}</div>
-      <div class="mt">申请时间：${new Date(a.timestamp).toLocaleString('zh-CN')}</div>
-      ${a.status==='approved'?`<div class="keybox"><code>${a.apiKey}</code><button class="cpbtn" onclick="cp('${a.apiKey}')">复制</button></div>`:''}
+      <div class="mt">申请时间：${fmt(a.timestamp)}</div>
+      ${a.resume?'<div class="mt">📄 简历：'+(a.resume.length>50?a.resume.substr(0,50)+'...':a.resume)+'</div>':''}
+      ${a.status==='approved'?'<div class="keybox"><code>'+a.apiKey+'</code><button class="cpbtn" onclick="cp(\''+a.apiKey+'\')">复制</button></div>':''}
+      ${a.status==='rejected'&&a.rejectReason?'<div class="reject-box"><b>❌ 拒绝原因：</b>'+a.rejectReason+'<br><small>可修改后重新提交</small></div>':''}
     </div>`).join('');
 }
 
@@ -195,21 +208,18 @@ async function loadUsage(){
   const div=document.getElementById('usage-box');
   await loadData();
   const myIds=getMyIds();
-  const myApps=(allData.applications||[]).filter(a=>myIds.includes(a.id));
+  const myApps=allData.applications.filter(a=>myIds.includes(a.id));
   const approved=myApps.filter(a=>a.status==='approved');
   if(approved.length===0){
-    div.innerHTML='<div class="empty">暂无已通过的Key<br><small style="color:#ccc">申请通过后可查看统计</small></div>';
-    return;
+    div.innerHTML='<div class="empty">暂无已通过的Key<br><small style="color:#ccc">申请通过后可查看统计</small></div>';return;
   }
   div.innerHTML=`<div class="sg">
     <div class="sb"><div class="sl">已通过Key</div><div class="sv">${approved.length}</div></div>
     <div class="sb"><div class="sl">今日调用</div><div class="sv">0</div></div>
-  </div>
-  <p style="color:#bbb;font-size:13px;text-align:center">调用统计功能开发中，敬请期待</p>`;
+  </div><p style="color:#bbb;font-size:13px;text-align:center">调用统计功能开发中，敬请期待</p>`;
 }
 
 function cp(key){navigator.clipboard.writeText(key).then(()=>alert('已复制！'))}
-
 loadData();
 </script>
 </body>
