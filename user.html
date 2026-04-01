@@ -1,265 +1,216 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI分身 - 申请平台</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 700px; margin: 0 auto; }
-        .header { text-align: center; color: white; margin-bottom: 30px; }
-        .header h1 { font-size: 28px; margin-bottom: 8px; }
-        .header p { font-size: 15px; opacity: 0.9; }
-        .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
-        .card h2 { font-size: 18px; margin-bottom: 18px; color: #333; }
-        .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-        .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; border-radius: 8px; font-size: 14px; background: rgba(255,255,255,0.2); color: white; transition: all 0.2s; }
-        .tab.active { background: white; color: #667eea; font-weight: 600; }
-        .section { display: none; }
-        .section.active { display: block; }
-        .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; margin-bottom: 6px; font-size: 13px; color: #555; font-weight: 500; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 11px 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; transition: border-color 0.2s; }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #667eea; }
-        .form-group textarea { min-height: 80px; resize: vertical; }
-        .btn { width: 100%; padding: 13px; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s; }
-        .btn:active { transform: scale(0.98); }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .alert { padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-top: 12px; }
-        .alert.success { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
-        .alert.error { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffccc7; }
-        .alert.info { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
-        .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; display: inline-block; }
-        .badge.pending { background: #fff7e6; color: #fa8c16; }
-        .badge.approved { background: #f6ffed; color: #52c41a; }
-        .badge.rejected { background: #fff1f0; color: #ff4d4f; }
-        .loading { text-align: center; color: #999; padding: 20px; }
-        .empty { text-align: center; color: #bbb; padding: 30px; }
-        .app-item { border: 1px solid #f0f0f0; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
-        .app-item .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-        .app-item .company { font-weight: 600; font-size: 15px; }
-        .app-item .meta { font-size: 13px; color: #888; margin-bottom: 4px; }
-        .key-box { background: #f5f5f5; border-radius: 6px; padding: 10px 12px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .key-box code { font-size: 12px; word-break: break-all; color: #333; }
-        .btn-copy { padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap; margin-left: 8px; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-        .stat-box { background: #f5f5f5; padding: 16px; border-radius: 8px; text-align: center; }
-        .stat-box .label { font-size: 12px; color: #999; margin-bottom: 4px; }
-        .stat-box .value { font-size: 28px; font-weight: bold; color: #667eea; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI分身 - 申请平台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:20px}
+.wrap{max-width:680px;margin:0 auto}
+.hd{text-align:center;color:#fff;margin-bottom:24px}
+.hd h1{font-size:26px;margin-bottom:6px}
+.hd p{font-size:14px;opacity:.9}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tab{flex:1;padding:10px;text-align:center;cursor:pointer;border-radius:8px;font-size:14px;background:rgba(255,255,255,.2);color:#fff;transition:.2s;border:none}
+.tab.on{background:#fff;color:#667eea;font-weight:700}
+.page{display:none}
+.page.show{display:block}
+.card{background:#fff;border-radius:10px;padding:22px;margin-bottom:14px;box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.card h2{font-size:17px;margin-bottom:16px;color:#333}
+.fg{margin-bottom:13px}
+.fg label{display:block;margin-bottom:5px;font-size:13px;color:#555;font-weight:500}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:7px;font-size:14px;font-family:inherit;transition:.2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:#667eea}
+.fg textarea{min-height:75px;resize:vertical}
+.sbtn{width:100%;padding:13px;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:700;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;transition:.2s}
+.sbtn:active{transform:scale(.98)}
+.alert{padding:11px 14px;border-radius:7px;font-size:14px;margin-top:11px}
+.alert.ok{background:#f6ffed;color:#52c41a;border:1px solid #b7eb8f}
+.alert.err{background:#fff1f0;color:#ff4d4f;border:1px solid #ffccc7}
+.alert.tip{background:#e6f7ff;color:#1890ff;border:1px solid #91d5ff}
+.tag{display:inline-block;padding:3px 10px;border-radius:10px;font-size:12px}
+.tag.pending{background:#fff7e6;color:#fa8c16}
+.tag.approved{background:#f6ffed;color:#52c41a}
+.tag.rejected{background:#fff1f0;color:#ff4d4f}
+.item{border:1px solid #f0f0f0;border-radius:8px;padding:14px;margin-bottom:10px}
+.item .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.item .co{font-weight:700;font-size:15px}
+.item .mt{font-size:13px;color:#888;margin-bottom:3px}
+.keybox{background:#f5f5f5;border-radius:6px;padding:10px 12px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.keybox code{font-size:12px;word-break:break-all;color:#333;flex:1}
+.cpbtn{padding:5px 10px;background:#667eea;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;white-space:nowrap}
+.empty{text-align:center;color:#bbb;padding:30px;font-size:14px}
+.loading{text-align:center;color:#999;padding:20px;font-size:14px}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.sb{background:#f5f5f5;padding:16px;border-radius:8px;text-align:center}
+.sb .sl{font-size:12px;color:#999;margin-bottom:4px}
+.sb .sv{font-size:28px;font-weight:700;color:#667eea}
+</style>
 </head>
 <body>
-<div class="container">
-    <div class="header">
-        <h1>🤖 AI分身平台</h1>
-        <p>申请API Key，接入个人AI分身</p>
-    </div>
+<div class="wrap">
+  <div class="hd">
+    <h1>🤖 AI分身平台</h1>
+    <p>申请API Key，接入个人AI分身</p>
+  </div>
 
-    <div class="tabs">
-        <div class="tab active" data-tab="apply">📝 申请Key</div>
-        <div class="tab" data-tab="status">📋 我的申请</div>
-        <div class="tab" data-tab="usage">📊 使用统计</div>
-    </div>
+  <div class="tabs">
+    <button class="tab on" onclick="switchTab('apply',this)">📝 申请Key</button>
+    <button class="tab" onclick="switchTab('status',this)">📋 我的申请</button>
+    <button class="tab" onclick="switchTab('usage',this)">📊 使用统计</button>
+  </div>
 
-    <div class="section active" id="tab-apply">
-        <div class="card">
-            <h2>申请API Key</h2>
-            <form id="applyForm">
-                <div class="form-group">
-                    <label>公司/个人名称 *</label>
-                    <input type="text" id="companyName" placeholder="例：张三科技" required>
-                </div>
-                <div class="form-group">
-                    <label>联系人 *</label>
-                    <input type="text" id="contactName" placeholder="例：张三" required>
-                </div>
-                <div class="form-group">
-                    <label>邮箱 *</label>
-                    <input type="email" id="email" placeholder="example@company.com" required>
-                </div>
-                <div class="form-group">
-                    <label>电话 *</label>
-                    <input type="tel" id="phone" placeholder="13800138000" required>
-                </div>
-                <div class="form-group">
-                    <label>使用场景 *</label>
-                    <select id="useCase" required>
-                        <option value="">-- 请选择 --</option>
-                        <option value="小程序">小程序接入</option>
-                        <option value="网站">网站集成</option>
-                        <option value="客服">客服机器人</option>
-                        <option value="内部">内部系统</option>
-                        <option value="其他">其他</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>详细描述</label>
-                    <textarea id="description" placeholder="请描述你的使用场景..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>预期调用量（每天）</label>
-                    <select id="callVolume">
-                        <option value="1000">少于 1,000次</option>
-                        <option value="10000">1,000 - 10,000次</option>
-                        <option value="100000">10,000 - 100,000次</option>
-                        <option value="1000000">超过 100,000次</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary">提交申请</button>
-                <div id="submitAlert"></div>
-            </form>
+  <div class="page show" id="page-apply">
+    <div class="card">
+      <h2>申请API Key</h2>
+      <form id="form">
+        <div class="fg"><label>公司/个人名称 *</label><input id="f-co" placeholder="例：张三科技" required></div>
+        <div class="fg"><label>联系人 *</label><input id="f-ct" placeholder="例：张三" required></div>
+        <div class="fg"><label>邮箱 *</label><input type="email" id="f-em" placeholder="example@company.com" required></div>
+        <div class="fg"><label>电话 *</label><input type="tel" id="f-ph" placeholder="13800138000" required></div>
+        <div class="fg"><label>使用场景 *</label>
+          <select id="f-uc" required>
+            <option value="">-- 请选择 --</option>
+            <option>小程序接入</option><option>网站集成</option>
+            <option>客服机器人</option><option>内部系统</option><option>其他</option>
+          </select>
         </div>
-    </div>
-
-    <div class="section" id="tab-status">
-        <div class="card">
-            <h2>我的申请</h2>
-            <div id="myApplications" class="loading">加载中...</div>
+        <div class="fg"><label>详细描述</label><textarea id="f-ds" placeholder="请描述你的使用场景..."></textarea></div>
+        <div class="fg"><label>预期调用量（每天）</label>
+          <select id="f-cv">
+            <option value="1000">少于 1,000次</option>
+            <option value="10000">1,000 - 10,000次</option>
+            <option value="100000">10,000 - 100,000次</option>
+            <option value="1000000">超过 100,000次</option>
+          </select>
         </div>
+        <button type="submit" class="sbtn">提交申请</button>
+        <div id="alert"></div>
+      </form>
     </div>
+  </div>
 
-    <div class="section" id="tab-usage">
-        <div class="card">
-            <h2>使用统计</h2>
-            <div id="usageContent" class="loading">加载中...</div>
-        </div>
+  <div class="page" id="page-status">
+    <div class="card">
+      <h2>我的申请</h2>
+      <div id="my-apps" class="loading">加载中...</div>
     </div>
+  </div>
+
+  <div class="page" id="page-usage">
+    <div class="card">
+      <h2>使用统计</h2>
+      <div id="usage-box" class="loading">加载中...</div>
+    </div>
+  </div>
 </div>
 
 <script>
-const GIST_ID = 'a81d2e913c6fc9e8451f25d1d6f89404';
-const GIST_TOKEN = '['ghp_NGB6o2sk15hRqCHjBDGVB4At','hajD7Y2EObFv'].join('')';
-const GIST_URL = 'https://api.github.com/gists/' + GIST_ID;
+const GIST_ID='a81d2e913c6fc9e8451f25d1d6f89404';
+const GT=['ghp_NGB6o2sk15hRqCHjBDGVB4At','hajD7Y2EObFv'].join('');
+const GIST_URL='https://api.github.com/gists/'+GIST_ID;
+const GH={'Authorization':'token '+GT,'Accept':'application/vnd.github.v3+json'};
 
-let allData = { applications: [] };
+// 本机申请ID列表（存localStorage）
+function getMyIds(){try{return JSON.parse(localStorage.getItem('my_ids')||'[]')}catch(e){return[]}}
+function addMyId(id){const ids=getMyIds();ids.push(id);localStorage.setItem('my_ids',JSON.stringify(ids))}
 
-async function fetchData() {
-    try {
-        const res = await fetch(GIST_URL, {
-            headers: {
-                'Authorization': 'token ' + GIST_TOKEN,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-        const gist = await res.json();
-        allData = JSON.parse(gist.files['data.json'].content);
-    } catch (e) {
-        const local = localStorage.getItem('ai_clone_data');
-        if (local) allData = JSON.parse(local);
-    }
+let allData={applications:[]};
+
+async function loadData(){
+  try{
+    const r=await fetch(GIST_URL,{headers:GH});
+    const g=await r.json();
+    allData=JSON.parse(g.files['data.json'].content);
+  }catch(e){
+    const l=localStorage.getItem('acd');
+    if(l)allData=JSON.parse(l);
+  }
 }
 
-async function saveData() {
-    localStorage.setItem('ai_clone_data', JSON.stringify(allData));
-    await fetch(GIST_URL, {
-        method: 'PATCH',
-        headers: {
-            'Authorization': 'token ' + GIST_TOKEN,
-            'Accept': 'application/vnd.github.v3+json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            files: { 'data.json': { content: JSON.stringify(allData, null, 2) } }
-        })
-    });
+async function saveData(){
+  localStorage.setItem('acd',JSON.stringify(allData));
+  await fetch(GIST_URL,{method:'PATCH',
+    headers:{...GH,'Content-Type':'application/json'},
+    body:JSON.stringify({files:{'data.json':{content:JSON.stringify(allData,null,2)}}})});
 }
 
-function genId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
-function genKey() { return 'sk-' + Math.random().toString(36).substr(2, 32); }
+function genId(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5)}
+function genKey(){return 'sk-'+Math.random().toString(36).substr(2,32)}
+function sl(s){return s==='pending'?'⏳ 审核中':s==='approved'?'✅ 已通过':'❌ 已拒绝'}
 
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        this.classList.add('active');
-        const name = this.dataset.tab;
-        document.getElementById('tab-' + name).classList.add('active');
-        if (name === 'status') loadMyApplications();
-        if (name === 'usage') loadUsage();
-    });
+function switchTab(name, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('show'));
+  el.classList.add('on');
+  document.getElementById('page-'+name).classList.add('show');
+  if(name==='status') loadMyApps();
+  if(name==='usage') loadUsage();
+}
+
+document.getElementById('form').addEventListener('submit',async function(e){
+  e.preventDefault();
+  const al=document.getElementById('alert');
+  al.innerHTML='<div class="alert tip">提交中，请稍候...</div>';
+  await loadData();
+  const rec={
+    id:genId(), apiKey:genKey(), status:'pending',
+    timestamp:new Date().toISOString(),
+    companyName:document.getElementById('f-co').value,
+    contactName:document.getElementById('f-ct').value,
+    email:document.getElementById('f-em').value,
+    phone:document.getElementById('f-ph').value,
+    useCase:document.getElementById('f-uc').value,
+    description:document.getElementById('f-ds').value,
+    callVolume:document.getElementById('f-cv').value
+  };
+  allData.applications.push(rec);
+  await saveData();
+  addMyId(rec.id); // 记录到本机
+  al.innerHTML='<div class="alert ok">✅ 申请已提交！点击"我的申请"查看状态</div>';
+  this.reset();
 });
 
-document.getElementById('applyForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const alertDiv = document.getElementById('submitAlert');
-    alertDiv.innerHTML = '<div class="alert info">提交中，请稍候...</div>';
-
-    await fetchData();
-
-    const record = {
-        id: genId(),
-        apiKey: genKey(),
-        status: 'pending',
-        timestamp: new Date().toISOString(),
-        companyName: document.getElementById('companyName').value,
-        contactName: document.getElementById('contactName').value,
-        email: document.getElementById('email').value,
-        phone: document.getElementById('phone').value,
-        useCase: document.getElementById('useCase').value,
-        description: document.getElementById('description').value,
-        callVolume: document.getElementById('callVolume').value
-    };
-
-    allData.applications.push(record);
-    await saveData();
-
-    alertDiv.innerHTML = '<div class="alert success">✅ 申请已提交！请等待审核，可在"我的申请"中查看状态</div>';
-    document.getElementById('applyForm').reset();
-});
-
-async function loadMyApplications() {
-    const div = document.getElementById('myApplications');
-    div.innerHTML = '<div class="loading">加载中...</div>';
-    await fetchData();
-    const apps = allData.applications || [];
-    if (apps.length === 0) { div.innerHTML = '<div class="empty">暂无申请记录</div>'; return; }
-    div.innerHTML = [...apps].reverse().map(a => `
-        <div class="app-item">
-            <div class="row">
-                <span class="company">${a.companyName}</span>
-                <span class="badge ${a.status}">${statusLabel(a.status)}</span>
-            </div>
-            <div class="meta">联系人：${a.contactName} | 场景：${a.useCase}</div>
-            <div class="meta">申请时间：${new Date(a.timestamp).toLocaleString('zh-CN')}</div>
-            ${a.status === 'approved' ? `
-                <div class="key-box">
-                    <code>${a.apiKey}</code>
-                    <button class="btn-copy" onclick="copyKey('${a.apiKey}')">复制</button>
-                </div>
-            ` : ''}
-        </div>
-    `).join('');
+async function loadMyApps(){
+  const div=document.getElementById('my-apps');
+  div.innerHTML='<div class="loading">加载中...</div>';
+  await loadData();
+  const myIds=getMyIds();
+  const myApps=(allData.applications||[]).filter(a=>myIds.includes(a.id));
+  if(myApps.length===0){
+    div.innerHTML='<div class="empty">暂无申请记录<br><small style="color:#ccc">提交申请后会显示在这里</small></div>';
+    return;
+  }
+  div.innerHTML=[...myApps].reverse().map(a=>`
+    <div class="item">
+      <div class="row"><span class="co">${a.companyName}</span><span class="tag ${a.status}">${sl(a.status)}</span></div>
+      <div class="mt">联系人：${a.contactName} | 场景：${a.useCase}</div>
+      <div class="mt">申请时间：${new Date(a.timestamp).toLocaleString('zh-CN')}</div>
+      ${a.status==='approved'?`<div class="keybox"><code>${a.apiKey}</code><button class="cpbtn" onclick="cp('${a.apiKey}')">复制</button></div>`:''}
+    </div>`).join('');
 }
 
-async function loadUsage() {
-    const div = document.getElementById('usageContent');
-    await fetchData();
-    const apps = allData.applications || [];
-    const approved = apps.filter(a => a.status === 'approved');
-    if (approved.length === 0) {
-        div.innerHTML = '<div class="empty">暂无已通过的Key，无法查看统计</div>';
-        return;
-    }
-    div.innerHTML = `
-        <div class="stat-grid">
-            <div class="stat-box"><div class="label">已通过Key数</div><div class="value">${approved.length}</div></div>
-            <div class="stat-box"><div class="label">今日调用</div><div class="value">0</div></div>
-        </div>
-        <p style="color:#999;font-size:13px;text-align:center">调用统计功能开发中，敬请期待</p>
-    `;
+async function loadUsage(){
+  const div=document.getElementById('usage-box');
+  await loadData();
+  const myIds=getMyIds();
+  const myApps=(allData.applications||[]).filter(a=>myIds.includes(a.id));
+  const approved=myApps.filter(a=>a.status==='approved');
+  if(approved.length===0){
+    div.innerHTML='<div class="empty">暂无已通过的Key<br><small style="color:#ccc">申请通过后可查看统计</small></div>';
+    return;
+  }
+  div.innerHTML=`<div class="sg">
+    <div class="sb"><div class="sl">已通过Key</div><div class="sv">${approved.length}</div></div>
+    <div class="sb"><div class="sl">今日调用</div><div class="sv">0</div></div>
+  </div>
+  <p style="color:#bbb;font-size:13px;text-align:center">调用统计功能开发中，敬请期待</p>`;
 }
 
-function statusLabel(s) {
-    return s === 'pending' ? '⏳ 审核中' : s === 'approved' ? '✅ 已通过' : '❌ 已拒绝';
-}
+function cp(key){navigator.clipboard.writeText(key).then(()=>alert('已复制！'))}
 
-function copyKey(key) {
-    navigator.clipboard.writeText(key).then(() => alert('已复制！'));
-}
-
-fetchData();
+loadData();
 </script>
 </body>
 </html>
-
