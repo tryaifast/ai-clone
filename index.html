@@ -152,6 +152,25 @@ footer p{margin-bottom:6px}
 .pro-grid{grid-template-columns:1fr}
 .clone-g{grid-template-columns:1fr}
 }
+
+.auth-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:3000;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(20px)}
+.auth-overlay.show{display:flex}
+.auth-box{background:var(--card);border-radius:24px;padding:36px;width:100%;max-width:400px;border:1px solid var(--border);text-align:center}
+.auth-box h2{font-size:24px;font-weight:700;margin-bottom:8px}
+.auth-box p{color:var(--gray);font-size:14px;margin-bottom:28px}
+.auth-tabs{display:flex;gap:0;margin-bottom:24px;background:var(--card2);border-radius:10px;padding:4px}
+.auth-tab{flex:1;padding:8px;border-radius:8px;font-size:14px;background:none;border:none;color:var(--gray);cursor:pointer;transition:.2s}
+.auth-tab.active{background:var(--card);color:var(--fg);font-weight:600}
+.phone-row{display:flex;gap:8px;margin-bottom:12px}
+.phone-row input{flex:1}
+.code-btn{padding:11px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card2);color:var(--blued);font-size:13px;cursor:pointer;white-space:nowrap;transition:.2s}
+.code-btn:hover{background:rgba(41,151,255,.1)}
+.code-btn:disabled{color:var(--gray);cursor:not-allowed}
+.auth-submit{width:100%;padding:13px;border-radius:980px;background:var(--blued);color:#fff;font-size:15px;font-weight:600;border:none;cursor:pointer;transition:.2s;margin-top:8px}
+.auth-submit:hover{filter:brightness(1.1)}
+.auth-err{color:#ff453a;font-size:13px;margin-top:8px;min-height:20px}
+.auth-switch{color:var(--gray);font-size:13px;margin-top:16px}
+.auth-switch a{color:var(--blued);cursor:pointer}
 </style>
 </head>
 <body>
@@ -163,7 +182,7 @@ footer p{margin-bottom:6px}
       <a href="#" onclick="showPage('home');return false">首页</a>
       <a href="#" onclick="document.getElementById('marketplace').scrollIntoView({behavior:'smooth'});return false">浏览分身</a>
       <a href="#" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'});return false">定价</a>
-      <a href="#" class="nav-cta" onclick="showPage('dash');return false">进入工作台</a>
+      <a href="#" class="nav-cta" onclick="enterDash();return false" id="nav-dash-btn">进入工作台</a>
     </div>
   </div>
 </nav>
@@ -176,8 +195,9 @@ footer p{margin-bottom:6px}
   <h1>你的<br><span class="g">数字替身</span></h1>
   <p>上传你的知识与经验，训练一个永远在线的AI分身。<br>帮人解决问题、回答咨询，实现知识变现。</p>
   <div class="hero-btns">
-    <button class="btn-p" onclick="showPage('dash')">立即入驻 →</button>
+    <button class="btn-p" onclick="enterDash()">立即入驻 →</button>
     <button class="btn-o" onclick="document.getElementById('marketplace').scrollIntoView({behavior:'smooth'})">浏览分身</button>
+    <button class="btn-o" onclick="window.location.href='user.html'" style="background:rgba(255,255,255,.08)">📝 申请入驻</button>
   </div>
   <div class="scroll-hint">↓ 向下探索</div>
 </div>
@@ -208,7 +228,7 @@ footer p{margin-bottom:6px}
   </div>
   <div class="m-list" id="marketplace-list"></div>
   <div style="text-align:center;margin-top:24px">
-    <button class="btn-o" onclick="showPage('dash')" style="font-size:14px;padding:10px 20px">查看更多 →</button>
+    <button class="btn-o" onclick="enterDash()" style="font-size:14px;padding:10px 20px">查看更多 →</button>
   </div>
 </section>
 
@@ -240,7 +260,7 @@ footer p{margin-bottom:6px}
       <div class="price-amt">免费 <span>/ 永久</span></div>
       <p class="price-sub">适合尝鲜体验</p>
       <ul class="price-list"><li>创建1个分身</li><li>100次调用/月</li><li>基础分身主页</li><li>社区支持</li></ul>
-      <button class="price-btn o" onclick="showPage('dash')">免费入驻</button>
+      <button class="price-btn o" onclick="enterDash()">免费入驻</button>
     </div>
     <div class="price-c pop">
       <div class="price-badge">最受欢迎</div>
@@ -248,7 +268,7 @@ footer p{margin-bottom:6px}
       <div class="price-amt">¥99 <span>/ 月</span></div>
       <p class="price-sub">适合自由职业者</p>
       <ul class="price-list"><li>最多5个分身</li><li>5000次调用/月</li><li>专业分身主页</li><li>优先训练速度</li><li>提现免手续费</li></ul>
-      <button class="price-btn p" onclick="showPage('dash')">立即开通</button>
+      <button class="price-btn p" onclick="enterDash()">立即开通</button>
     </div>
     <div class="price-c">
       <h3>企业版</h3>
@@ -287,7 +307,7 @@ footer p{margin-bottom:6px}
     </div>
 
     <div class="dash-box" id="dash-profile">
-      <div id="view-mode">
+      <div id="view-mode"><div style="display:flex;justify-content:flex-end;margin-bottom:16px"><button class="btn-p" onclick="showEdit()" style="padding:8px 16px;font-size:13px;border-radius:10px">✏️ 编辑资料</button></div>
         <div class="pro-disp">
           <div class="pro-ava" id="p-ava">?</div>
           <div class="pro-info"><h3 id="p-name">未填写</h3><p id="p-title">未填写头衔</p></div>
@@ -302,7 +322,7 @@ footer p{margin-bottom:6px}
           <div class="kl" style="font-size:11px;color:var(--gray);margin-bottom:6px">工作简历</div>
           <div class="pro-resume" id="p-resume">暂无简历</div>
         </div>
-        <button class="btn-p" onclick="showEdit()" style="padding:10px 18px;font-size:14px;border-radius:10px">✏️ 编辑资料</button>
+        
       </div>
 
       <div id="edit-mode" style="display:none">
@@ -652,11 +672,155 @@ function showToast(msg,type='ok'){
   setTimeout(()=>t.classList.remove('show'),3000);
 }
 
+
+// ===== AUTH SYSTEM =====
+let currentUser = null;
+let authMode = 'login';
+let generatedCode = '';
+let codeTimer = null;
+
+function enterDash() {
+  // Check if already logged in
+  const saved = localStorage.getItem('ac_user');
+  if (saved) {
+    try {
+      currentUser = JSON.parse(saved);
+      showPage('dash');
+      return;
+    } catch(e) {}
+  }
+  // Show auth modal
+  document.getElementById('auth-modal').classList.add('show');
+}
+
+function switchAuth(mode, btn) {
+  authMode = mode;
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('auth-title').textContent = mode === 'login' ? '欢迎回来' : '创建账号';
+  document.getElementById('auth-desc').textContent = mode === 'login' ? '登录你的AI Clone账号' : '注册一个新账号，开始入驻';
+  document.getElementById('auth-err').textContent = '';
+}
+
+function sendCode() {
+  const phone = document.getElementById('auth-phone').value.trim();
+  if (!/^1[3-9]\d{9}$/.test(phone)) {
+    document.getElementById('auth-err').textContent = '请输入正确的手机号';
+    return;
+  }
+  // Generate 6-digit code (no real SMS)
+  generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const hint = document.getElementById('code-hint');
+  hint.style.display = 'block';
+  hint.textContent = '验证码（测试模式）：' + generatedCode;
+  document.getElementById('auth-err').textContent = '';
+  
+  // Countdown
+  let sec = 60;
+  const btn = document.getElementById('code-btn');
+  btn.disabled = true;
+  if (codeTimer) clearInterval(codeTimer);
+  codeTimer = setInterval(() => {
+    sec--;
+    btn.textContent = sec + 's后重发';
+    if (sec <= 0) {
+      clearInterval(codeTimer);
+      btn.disabled = false;
+      btn.textContent = '获取验证码';
+    }
+  }, 1000);
+}
+
+async function doAuth() {
+  const phone = document.getElementById('auth-phone').value.trim();
+  const code = document.getElementById('auth-code').value.trim();
+  const errEl = document.getElementById('auth-err');
+  
+  if (!/^1[3-9]\d{9}$/.test(phone)) { errEl.textContent = '请输入正确的手机号'; return; }
+  if (!code) { errEl.textContent = '请输入验证码'; return; }
+  if (code !== generatedCode) { errEl.textContent = '验证码错误，请重新获取'; return; }
+  
+  // Load cloud data
+  await loadData();
+  
+  // Check if phone already registered
+  const users = appData.users || [];
+  let user = users.find(u => u.phone === phone);
+  
+  if (authMode === 'register') {
+    if (user) { errEl.textContent = '该手机号已注册，请直接登录'; return; }
+    user = {
+      id: genId(),
+      phone,
+      deviceId,
+      joinedAt: new Date().toISOString(),
+      name: '',
+      title: '',
+      company: '',
+      email: '',
+      resume: ''
+    };
+    if (!appData.users) appData.users = [];
+    appData.users.push(user);
+    await saveData();
+    showToast('✅ 注册成功！');
+  } else {
+    if (!user) { errEl.textContent = '该手机号未注册，请先注册'; return; }
+  }
+  
+  currentUser = user;
+  localStorage.setItem('ac_user', JSON.stringify(user));
+  document.getElementById('auth-modal').classList.remove('show');
+  
+  // Load user's clones
+  appData.clones = (appData.clones || []).filter(c => c.ownerId === user.id);
+  
+  showPage('dash');
+  renderDash();
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem('ac_user');
+  showPage('home');
+  showToast('已退出登录');
+}
+
 // ===== INIT =====
 loadData().then(()=>{
   renderDash();
   renderMarketplace();
 });
 </script>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="auth-modal">
+  <div class="auth-box">
+    <div style="font-size:40px;margin-bottom:12px">🤖</div>
+    <h2 id="auth-title">欢迎回来</h2>
+    <p id="auth-desc">登录你的AI Clone账号</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuth('login',this)">登录</button>
+      <button class="auth-tab" onclick="switchAuth('register',this)">注册</button>
+    </div>
+    <div id="auth-form">
+      <div class="fg">
+        <label>手机号</label>
+        <div class="phone-row">
+          <input id="auth-phone" type="tel" placeholder="请输入手机号" maxlength="11">
+          <button class="code-btn" id="code-btn" onclick="sendCode()">获取验证码</button>
+        </div>
+      </div>
+      <div class="fg">
+        <label>验证码</label>
+        <input id="auth-code" type="text" placeholder="请输入验证码" maxlength="6">
+        <div class="hint" id="code-hint" style="display:none;color:var(--blued)"></div>
+      </div>
+      <div class="auth-err" id="auth-err"></div>
+      <button class="auth-submit" onclick="doAuth()">登录 / 注册</button>
+    </div>
+    <div class="auth-switch">没有账号？<a onclick="switchAuth('register')">立即注册</a></div>
+  </div>
+</div>
 </body>
 </html>
