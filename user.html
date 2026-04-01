@@ -72,13 +72,6 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
         }
-        .btn-secondary {
-            background: #f0f0f0;
-            color: #333;
-        }
-        .btn-secondary:hover {
-            background: #e0e0e0;
-        }
         .status {
             padding: 8px 16px;
             border-radius: 6px;
@@ -189,6 +182,7 @@
             background: #667eea;
         }
         .loading { text-align: center; color: #999; padding: 20px; }
+        .empty { text-align: center; color: #999; padding: 40px; }
     </style>
 </head>
 <body>
@@ -290,6 +284,20 @@
                         <div class="value" id="successRate">0%</div>
                     </div>
                 </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>调用次数</th>
+                            <th>成功</th>
+                            <th>失败</th>
+                            <th>成功率</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usageTable">
+                        <tr><td colspan="5" class="empty">暂无数据</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -312,8 +320,14 @@
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
                 this.classList.add('active');
-                document.getElementById('tab-' + this.dataset.tab).classList.add('active');
-                if (this.dataset.tab === 'status') loadApplications();
+                const tabName = this.dataset.tab;
+                document.getElementById('tab-' + tabName).classList.add('active');
+                
+                if (tabName === 'status') {
+                    loadApplications();
+                } else if (tabName === 'usage') {
+                    loadUsageStats();
+                }
             });
         });
 
@@ -332,15 +346,16 @@
                 callVolume: document.getElementById('callVolume').value,
                 apiKey: generateApiKey(),
                 status: 'pending',
-                timestamp: new Date().toISOString(),
-                _id: Math.random().toString(36).substr(2, 9)
+                timestamp: new Date().toISOString()
             };
 
             try {
                 await db.collection('applications').add(data);
                 statusDiv.innerHTML = `<div class="status success">✅ 申请已提交！请等待审核</div>`;
                 document.getElementById('applyForm').reset();
-                setTimeout(() => loadApplications(), 1000);
+                setTimeout(() => {
+                    document.querySelectorAll('.tab')[1].click();
+                }, 1500);
             } catch (error) {
                 statusDiv.innerHTML = `<div class="status error">❌ 提交失败: ${error.message}</div>`;
             }
@@ -350,13 +365,13 @@
         async function loadApplications() {
             try {
                 const result = await db.collection('applications').get();
-                const applications = result.data;
+                const applications = result.data || [];
                 
                 const listDiv = document.getElementById('applicationsList');
                 const approvedDiv = document.getElementById('approvedKeysList');
                 
                 if (applications.length === 0) {
-                    listDiv.innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">暂无申请记录</p>';
+                    listDiv.innerHTML = '<p class="empty">暂无申请记录</p>';
                     document.getElementById('approvedKeysCard').style.display = 'none';
                     return;
                 }
@@ -394,6 +409,20 @@
                 }
             } catch (error) {
                 document.getElementById('applicationsList').innerHTML = `<div class="status error">❌ 加载失败: ${error.message}</div>`;
+            }
+        }
+
+        // 加载使用统计
+        async function loadUsageStats() {
+            try {
+                // 这里可以从后端获取真实的使用数据
+                // 现在显示示例数据
+                document.getElementById('todayUsage').textContent = '0';
+                document.getElementById('monthUsage').textContent = '0';
+                document.getElementById('totalUsage').textContent = '0';
+                document.getElementById('successRate').textContent = '0%';
+            } catch (error) {
+                console.error('加载使用统计失败:', error);
             }
         }
 
